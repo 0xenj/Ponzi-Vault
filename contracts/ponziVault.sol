@@ -30,13 +30,15 @@ contract Vault is Controlable {
     return x <= y ? x : y;
   }
 
-  function durationLeft() external view returns (uint) {}
+  function durationLeft() public view returns (uint) {}
 
-  function updateRewardRate(uint _rewardRate) external {}
+  function updateRewardRate(uint _rewardRate) external onlyOwner {
+    rewardRate = _rewardRate;
+  }
 
   function getRewardRate() public view returns (uint) {}
 
-  function updateRewardPerTokenStaked(uint _RewardPerToken) external {}
+  function updateRewardPerTokenStaked(uint _RewardPerToken) external onlyOwner {}
 
   function getRewardPerToken() public view returns (uint) {}
 }
