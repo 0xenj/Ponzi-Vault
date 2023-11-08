@@ -22,7 +22,12 @@ contract Vault is Controlable {
     token = IERC20(_token);
   }
 
-  function staking(uint _amount) external {}
+  function staking(uint _amount) external {
+    require(_amount > 0, 'amount = 0');
+    token.transferFrom(msg.sender, address(this), _amount);
+    balanceOf[msg.sender] += _amount;
+    totalSupply += _amount;
+  }
 
   function claimReward() external {}
 
@@ -36,9 +41,15 @@ contract Vault is Controlable {
     rewardRate = _rewardRate;
   }
 
-  function getRewardRate() public view returns (uint) {}
+  function getRewardRate() public view returns (uint) {
+    return rewardRate;
+  }
 
-  function updateRewardPerTokenStaked(uint _RewardPerToken) external onlyOwner {}
+  function updateRewardPerTokenStaked(uint _rewardPerToken) external onlyOwner {
+    rewardPerTokenStaked = _rewardPerToken;
+  }
 
-  function getRewardPerToken() public view returns (uint) {}
+  function getRewardPerToken() public view returns (uint) {
+    return rewardPerTokenStaked;
+  }
 }
