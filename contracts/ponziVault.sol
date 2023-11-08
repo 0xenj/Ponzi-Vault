@@ -8,7 +8,6 @@ contract Vault is Controlable {
   IERC20 public immutable token;
 
   uint public totalSupply;
-  uint public finishAt;
   uint public rewardRate;
   uint public rewardPerTokenStaked;
   uint public constant THIRTY_DAYS = 30 days;
@@ -17,10 +16,13 @@ contract Vault is Controlable {
 
   mapping(address => bool) private supportedToken;
   mapping(address => uint) public balanceOf;
+  mapping(address => uint) public timestamp;
 
   constructor(address _token) {
     token = IERC20(_token);
   }
+
+  modifier TimeIsUp(address _account) {}
 
   function staking(uint _amount) external {
     require(_amount > 0, 'amount = 0');
