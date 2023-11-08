@@ -22,7 +22,12 @@ contract Vault is Controlable {
     token = IERC20(_token);
   }
 
-  modifier TimeIsUp(address _account) {}
+  modifier TimeIsUp(address _account) {
+    require(_account != address(0), 'Address 0 is not available');
+    if (_min(timestamp[_account], block.timestamp) == block.timestamp) {
+      _;
+    }
+  }
 
   function staking(uint _amount) external {
     require(_amount > 0, 'amount = 0');
