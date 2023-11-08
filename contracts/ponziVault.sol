@@ -14,9 +14,14 @@ contract Vault is Controlable {
   uint public constant NINETY_DAYS = 90 days;
   uint public constant HUNDRED_EIGHTY_DAYS = 180 days;
 
+  struct Staking {
+    uint balanceOf;
+    uint finishAt;
+    uint _days;
+  }
+
   mapping(address => bool) private supportedToken;
-  mapping(address => uint) public balanceOf;
-  mapping(address => uint) public timestamp;
+  mapping(address => Staking) public _staking;
 
   constructor(address _token) {
     token = IERC20(_token);
@@ -24,15 +29,38 @@ contract Vault is Controlable {
 
   modifier TimeIsUp(address _account) {
     require(_account != address(0), 'Address 0 is not available');
-    if (_min(timestamp[_account], block.timestamp) == block.timestamp) {
-      _;
+    if (_min(_staking[_account].finishAt, block.timestamp) == block.timestamp && _staking[_account].finishAt != 0) {
+      _staking[_account].balanceOf = 0;
+      _staking[_account].finishAt = 0;
+      _staking[_account]._days = 0;
     }
+
+    _;
   }
 
-  function staking(uint _amount) external {
+  modifier enableToStake(address _account, uint _amount) {
+    require(_staking[_account].balanceOf == 0, 'User is already staking');
     require(_amount > 0, 'amount = 0');
+    _;
+  }
+
+  function stakingOneMonth(uint _amount) external enableToStake(msg.sender, _amount) {
+    staking(_amount, THIRTY_DAYS);
+  }
+
+  function stakingThreeMonth(uint _amount) external enableToStake(msg.sender, _amount) {
+    staking(_amount, NINETY_DAYS);
+  }
+
+  function stakingSixMonth(uint _amount) external enableToStake(msg.sender, _amount) {
+    staking(_amount, HUNDRED_EIGHTY_DAYS);
+  }
+
+  function staking(uint _amount, uint _days) internal {
     token.transferFrom(msg.sender, address(this), _amount);
-    balanceOf[msg.sender] += _amount;
+    _staking[msg.sender].balanceOf += _amount;
+    _staking[msg.sender].finishAt = block.timestamp + _days;
+    _staking[msg.sender]._days = _days;
     totalSupply += _amount;
   }
 
