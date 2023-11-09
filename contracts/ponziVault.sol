@@ -9,7 +9,6 @@ contract Vault is Controlable {
 
   uint public totalSupply;
   uint public rewardRate;
-  uint public rewardPerTokenStaked;
   uint public constant THIRTY_DAYS = 30 days;
   uint public constant NINETY_DAYS = 90 days;
   uint public constant HUNDRED_EIGHTY_DAYS = 180 days;
@@ -92,13 +91,5 @@ contract Vault is Controlable {
 
   function getRewardRate() public view returns (uint) {
     return rewardRate;
-  }
-
-  function updateRewardPerTokenStaked(uint _rewardPerToken) external onlyOwner {
-    rewardPerTokenStaked = _rewardPerToken;
-  }
-
-  function getRewardPerToken() public view returns (uint) {
-    return rewardPerTokenStaked;
   }
 }
