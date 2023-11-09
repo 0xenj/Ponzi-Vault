@@ -27,14 +27,10 @@ contract Vault is Controlable {
     token = IERC20(_token);
   }
 
-  modifier TimeIsUp(address _account) {
+  modifier enableToClaim(address _account) {
     require(_account != address(0), 'Address 0 is not available');
-    if (_min(_staking[_account].finishAt, block.timestamp) == block.timestamp && _staking[_account].finishAt != 0) {
-      _staking[_account].balanceOf = 0;
-      _staking[_account].finishAt = 0;
-      _staking[_account]._days = 0;
-    }
-
+    require(_min(_staking[_account].finishAt, block.timestamp) == block.timestamp, 'Time staking is not finish');
+    require(_staking[_account].finishAt != 0, 'No funds staked');
     _;
   }
 
@@ -64,13 +60,31 @@ contract Vault is Controlable {
     totalSupply += _amount;
   }
 
-  function claimReward() external {}
+  function claimReward() external enableToClaim(msg.sender) {
+    uint reward = calculateEarning(msg.sender);
+    token.transferFrom(address(this), msg.sender, reward);
+    _staking[msg.sender].balanceOf = 0;
+    _staking[msg.sender].finishAt = 0;
+    _staking[msg.sender]._days = 0;
+    totalSupply -= reward;
+  }
+
+  function secToMonth(uint _amount) private pure returns (uint) {
+    return _amount / 60 / 60 / 24 / 30;
+  }
+
+  function calculateEarning(address _account) private view returns (uint) {
+    uint reward = _staking[_account].balanceOf * ((10 * secToMonth(_staking[_account]._days)) / 100);
+    return reward + _staking[_account].balanceOf;
+  }
 
   function _min(uint x, uint y) private pure returns (uint) {
     return x <= y ? x : y;
   }
 
-  function durationLeft() public view returns (uint) {}
+  function durationLeft() public view returns (uint) {
+    return _staking[msg.sender].finishAt - block.timestamp;
+  }
 
   function updateRewardRate(uint _rewardRate) external onlyOwner {
     rewardRate = _rewardRate;
