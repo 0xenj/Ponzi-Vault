@@ -8,6 +8,7 @@ contract Vault is Controlable {
   IERC20 public immutable token;
 
   uint public totalSupply;
+  /* 0.03 + 0.011 * x^2 */
   uint public rewardRate;
   uint public constant THIRTY_DAYS = 30 days;
   uint public constant NINETY_DAYS = 90 days;
