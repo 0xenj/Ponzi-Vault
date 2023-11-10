@@ -8,8 +8,7 @@ contract Vault is Controlable {
   IERC20 public immutable token;
 
   uint public totalSupply;
-  /* 0.03 + 0.011 * x^2 */
-  uint public rewardRate;
+  /* reward Function = 0.002x^2+0.042x−0.004*/
   uint public constant THIRTY_DAYS = 30 days;
   uint public constant NINETY_DAYS = 90 days;
   uint public constant HUNDRED_EIGHTY_DAYS = 180 days;
@@ -61,21 +60,25 @@ contract Vault is Controlable {
   }
 
   function claimReward() external enableToClaim(msg.sender) {
-    uint reward = calculateEarning(msg.sender);
-    token.transferFrom(address(this), msg.sender, reward);
+    uint claim = calculateEarning(msg.sender);
+    token.transferFrom(address(this), msg.sender, claim);
     _staking[msg.sender].balanceOf = 0;
     _staking[msg.sender].finishAt = 0;
     _staking[msg.sender]._days = 0;
-    totalSupply -= reward;
+    totalSupply -= claim;
   }
 
   function secToMonth(uint _amount) private pure returns (uint) {
     return _amount / 60 / 60 / 24 / 30;
   }
 
+  /* reward Function = 0.002x^2+0.042x−0.004*/
   function calculateEarning(address _account) private view returns (uint) {
-    uint reward = _staking[_account].balanceOf * ((10 * secToMonth(_staking[_account]._days)) / 100);
-    return reward + _staking[_account].balanceOf;
+    uint monthStacked = secToMonth(_staking[_account]._days);
+    uint balanceStacked = _staking[_account].balanceOf;
+
+    uint reward = balanceStacked * (((2 * monthStacked * monthStacked) + (42 * monthStacked) - 4) / 1000);
+    return reward + balanceStacked;
   }
 
   function _min(uint x, uint y) private pure returns (uint) {
@@ -84,13 +87,5 @@ contract Vault is Controlable {
 
   function durationLeft() public view returns (uint) {
     return _staking[msg.sender].finishAt - block.timestamp;
-  }
-
-  function updateRewardRate(uint _rewardRate) external onlyOwner {
-    rewardRate = _rewardRate;
-  }
-
-  function getRewardRate() public view returns (uint) {
-    return rewardRate;
   }
 }
